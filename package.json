@@ -1,0 +1,13 @@
+{
+  "name": "voc-analyzer-pro",
+  "version": "1.0.0",
+  "description": "Premium VOC Review Analyzer using Gemini AI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["voc", "analyzer", "gemini", "ai", "ux", "product"],
+  "author": "",
+  "license": "ISC"
+}

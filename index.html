@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOC Review Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=700">
+    <link rel="stylesheet" href="css/dashboard.css?v=701">
+    <!-- Chart.js for Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-box">
+                    <i data-lucide="bar-chart-2"></i>
+                </div>
+                <h2>VOC</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" id="btnNewAnalysis">
+                    <i data-lucide="edit-3"></i> 새 분석
+                </a>
+                <a href="#" class="nav-item" id="navSettingsBtn">
+                    <i data-lucide="settings"></i> 설정
+                </a>
+
+                <div class="history-section">
+                    <h3 class="history-title">최근 분석기록</h3>
+                    <div id="historyList" class="history-list">
+                        <!-- JS populated -->
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="usage-stats">
+                    <div class="usage-header">
+                        <span>AI 분석 사용량</span>
+                    </div>
+                    <div class="usage-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%;"></div>
+                        </div>
+                        <span class="usage-percent">65%</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Layout -->
+        <main class="main-layout state-empty">
+            <!-- Top Panel: Input Area -->
+            <section class="input-section" id="inputSection">
+                <div class="input-card">
+                    <div class="input-card-header">
+                        <div class="header-icon">
+                            <i data-lucide="bar-chart-2"></i>
+                        </div>
+                        <h2>VOC Analyzer</h2>
+                        <p>유저 리뷰를 입력하면 AI가 핵심 문제점과 개선 방향을 자동으로 분석합니다.</p>
+                    </div>
+
+                    <!-- Input Type Tabs -->
+                    <div class="input-tabs">
+                        <button class="tab-btn active" data-tab="manual">
+                            <i data-lucide="file-text"></i> 직접 입력
+                        </button>
+                        <button class="tab-btn" data-tab="store">
+                            <i data-lucide="download"></i> 앱스토어 연동
+                        </button>
+                    </div>
+
+                    <!-- Tab 1: Manual Input (Existing) -->
+                    <div class="tab-content active" id="tab-manual">
+                        <div class="input-group">
+                            <label>리뷰 데이터 입력</label>
+                            <textarea id="reviewInput"
+                                placeholder="앱 리뷰를 한 줄씩 입력해주세요...&#10;예시:&#10;로그인이 안 돼요&#10;앱이 너무 느려요&#10;디자인이 예뻐요"></textarea>
+                            <div class="input-footer">
+                                <span class="review-count-indicator">0개 리뷰 입력됨</span>
+                                <button class="btn-text">샘플 데이터 불러오기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: App Store Fetch -->
+                    <div class="tab-content" id="tab-store">
+                        <div class="store-form">
+                            <div class="form-group-inline">
+                                <label for="appIdInput">앱 이름 또는 ID</label>
+                                <input type="text" id="appIdInput" placeholder="예: 카카오톡 또는 362057947">
+                                <p class="help-text">앱 이름 또는 앱스토어 ID를 입력하세요.</p>
+                            </div>
+                            <div class="store-form-row">
+                                <div class="form-group-inline">
+                                    <label for="reviewCount">가져올 리뷰 개수</label>
+                                    <select id="reviewCount">
+                                        <option value="50">최근 50개</option>
+                                        <option value="100">최근 100개</option>
+                                        <option value="200">최근 200개</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="fetchReviewsBtn" class="btn-secondary">
+                                <i data-lucide="search"></i> 리뷰 수집하기
+                            </button>
+                        </div>
+
+                        <div class="fetched-reviews-container hidden" id="fetchedReviewsContainer">
+                            <div class="fetched-header">
+                                <span id="fetchedCount" class="badge">수집 준비중</span>
+                                <button id="clearReviewsBtn" class="btn-text" aria-label="Clear"><i
+                                        data-lucide="trash-2"></i></button>
+                            </div>
+                            <div class="reviews-list-wrapper">
+                                <div class="reviews-list" id="reviewsList">
+                                    <!-- Fetched reviews render here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-area">
+                        <button id="analyzeBtn" class="btn-analyze">
+                            <i data-lucide="sparkles"></i> 분석하기
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-features-list">
+                    <h4>💡 분석 결과로 확인할 수 있는 것</h4>
+                    <ul>
+                        <li>핵심 문제점 자동 추출 및 우선순위 분석</li>
+                        <li>UX/UI 관점과 Product 관점의 개선 방향 제안</li>
+                        <li>키워드 트렌드 및 감성 분석</li>
+                        <li>Impact/Effort 기반 우선순위 매트릭스</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Result Dashboard -->
+            <section class="dashboard-section" id="dashboard">
+                <div id="dashboardEmptyState" class="empty-state">
+                    <!-- Kept structurally, though hidden via CSS in state-empty since input card is used -->
+                </div>
+
+                <div id="dashboardLoadingState" class="loading-state hidden">
+                    <div class="spinner"></div>
+                    <h3>AI가 데이터를 분석 중입니다...</h3>
+                </div>
+
+
+
+
+
+
+
+
+
+                <div id="dashboardResults" class="results-content hidden">
+                    <!-- Report Header -->
+                    <div class="report-header">
+                        <h1>VOC Report</h1>
+                    </div>
+
+                    <!-- Top Row: Rating & Keywords -->
+                    <div class="dashboard-top-row">
+                        <div class="dashboard-card rating-card">
+                            <div class="card-header">
+                                <h3>별점 평균</h3>
+                                <div class="card-icon"><i data-lucide="star"></i></div>
+                            </div>
+                            <div class="rating-display">
+                                <span class="rating-value" id="kpiAvgRating">0.0</span>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card keywords-card">
+                            <div class="card-header">
+                                <h3>주요 키워드</h3>
+                            </div>
+                            <div class="keywords-content">
+                                <div class="keywords-pill-list" id="keywordsTags">
+                                    <!-- JS populated -->
+                                </div>
+                                <div class="keyword-reviews-container">
+                                    <div class="keyword-reviews-list" id="keywordQuotes">
+                                        <p class="text-muted placeholder-text">키워드를 클릭하면 관련 리뷰가 표시됩니다.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Problem Analysis & Recommendations -->
+                    <div class="analysis-section-header">
+                        <i data-lucide="info" class="header-info-icon"></i>
+                        <h2>Problem Analysis & Recommendations</h2>
+                    </div>
+
+                    <div class="dashboard-card analysis-card">
+                        <div class="analysis-filters">
+                            <button class="filter-tag active" data-severity="all">전체</button>
+                            <button class="filter-tag" data-severity="high">심각도: High</button>
+                            <button class="filter-tag" data-severity="medium">심각도: Medium</button>
+                            <button class="filter-tag" data-severity="low">심각도: Low</button>
+                        </div>
+
+                        <div class="analysis-container">
+                            <!-- Left: Problem List (Scrollable) -->
+                            <div class="problem-list-wrapper">
+                                <div class="problem-list" id="problemList">
+                                    <!-- JS populated -->
+                                </div>
+                            </div>
+
+                            <!-- Right: Problem Details (Scrollable) -->
+                            <div class="problem-detail-wrapper" id="problemDetailWrapper">
+                                <div class="problem-detail-placeholder">
+                                    <p>문제점을 선택하면 상세 분석 결과가 표시됩니다.</p>
+                                </div>
+                                <div class="problem-detail-content hidden" id="problemDetailContent">
+                                    <div class="detail-header">
+                                        <h3 id="detailTitle">문제 제목</h3>
+                                        <div class="detail-meta">
+                                            <span id="detailStats">0건 언급 | 전체 대비 0%</span>
+                                            <span id="detailBadge" class="priority-badge">Low</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4>인사이트</h4>
+                                        <div id="detailInsight" class="insight-text">인사이트 내용</div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4>개선 제안</h4>
+                                        <div class="recommendations-grid">
+                                            <div class="rec-box product">
+                                                <h5>Product 관점</h5>
+                                                <ul id="detailProductRec">
+                                                    <!-- JS populated -->
+                                                </ul>
+                                            </div>
+                                            <div class="rec-box uxui">
+                                                <h5>UX/UI 관점</h5>
+                                                <ul id="detailUxUiRec">
+                                                    <!-- JS populated -->
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4>관련 리뷰</h4>
+                                        <div id="detailReviews" class="detail-reviews-list">
+                                            <!-- JS populated -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>설정</h2>
+                <button id="closeSettingsBtn" class="btn-icon close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="apiKey">Google Gemini API Key</label>
+                    <input type="password" id="apiKey" placeholder="AI Studio에서 발급받은 키 입력" autocomplete="off">
+                    <p class="help-text">브라우저 내부에 안전하게 저장되며 서버로 전송되지 않습니다.</p>
+                </div>
+                <div class="form-actions">
+                    <button id="saveSettingsBtn" class="btn-primary">저장하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js?v=900"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
